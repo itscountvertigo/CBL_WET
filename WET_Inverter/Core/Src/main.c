@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "math.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,9 +97,15 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
-  __HAL_TIM_SET_PRESCALER(&htim1, 7);					// PSC
-  __HAL_TIM_SET_AUTORELOAD(&htim1, 9);					// ARR
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 5);		// CCR1 (duty cycle = CCR1/(ARR+1) )
+  int ARR = 79;
+
+  // f_PWM = 8MHz/((PSC+1)(ARR+1))
+  __HAL_TIM_SET_PRESCALER(&htim1, 0);					// PSC
+  __HAL_TIM_SET_AUTORELOAD(&htim1, ARR);				// ARR
+
+  int CCR_1 = round(0.5 * (ARR + 1));
+
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, CCR_1);		// CCR1 (duty cycle = CCR1/(ARR+1) )
 
   HAL_TIM_GenerateEvent(&htim1, TIM_EVENTSOURCE_UPDATE);
 
