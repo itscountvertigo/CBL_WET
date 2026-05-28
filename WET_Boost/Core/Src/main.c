@@ -103,17 +103,32 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-  // f_PWM = 8MHz/((PSC+1)(ARR+1))
+  float duty_cycle = 0.5;
+  float voltage_pin;
+  float current_pin;
+  float voltage_output;
+  float current_output;
+
+  float power_meas;
+  float power_prev;
+
+  int delta = 0.05; 							// change in duty cycle last cycle
+
   __HAL_TIM_SET_PRESCALER(&htim1, 0);						// PSC
   __HAL_TIM_SET_AUTORELOAD(&htim1, 79);						// ARR
 
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 40);			// CCR1 (duty cycle = CCR1/(ARR+1) )
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round(duty_cycle * 80));			// CCR1 (duty cycle = CCR1/(ARR+1) )
 
   HAL_TIM_GenerateEvent(&htim1, TIM_EVENTSOURCE_UPDATE);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-  // The PWM is started at 100kHz with 50% duty cycle
 
   __HAL_TIM_MOE_ENABLE(&htim1);
+  // f_PWM = 8MHz/((PSC+1)(ARR+1))
+  // The PWM is started at 100kHz with 50% duty cycle
+
+  // initialize ADC ports
+  uint32_t adc_raw[2];
+  HAL_ADC_Start_DMA(&hadc1, adc_raw, 2);
 
   /* USER CODE END 2 */
 
@@ -121,8 +136,33 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
 
+	  voltage_pin = (adc_raw[0] * 3.3f) / 4095.0f;
+	  current_pin = (adc_raw[1] * 3.3f) / 4095.0f;
+
+	  voltage_output = voltage_pin; // todo fix conversion/sensing
+	  current_output = current_pin; // todo fix conversion/sensing
+
+	  power_meas = voltage_output * current_output;
+
+	  if (power_meas > power_prev && delta > 0) {		// power incrased after increase in dutycycle
+		  duty_cycle = duty_cycle + 0.05;
+		  delta = 0.05;
+	  } else if (power_meas > power_prev && delta < 0){ // power increased after decrease in dutycycle
+
+		  duty_cycle = duty_cycle - 0.05;
+		  delta = -0.05;
+	  } else if (power_meas < power_prev && delta > 0) {
+
+
+	  } else if (power_meas < power_prev && delta < 0) {
+
+
+	  }
+
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round(duty_cycle * 80));
+
+	  /* USER CODE END WHILE */
 
 
     /* USER CODE BEGIN 3 */
