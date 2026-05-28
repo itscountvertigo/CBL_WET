@@ -97,7 +97,7 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
-  int ARR = 79;
+  int ARR = 88;					// 89.887 kHz (~90kHz)
 
   // f_PWM = 8MHz/((PSC+1)(ARR+1))
   __HAL_TIM_SET_PRESCALER(&htim1, 0);					// PSC
@@ -222,7 +222,7 @@ static void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 4;
+  sBreakDeadTimeConfig.DeadTime = 4;											// dead time = ~125ns * 4
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.BreakFilter = 0;
