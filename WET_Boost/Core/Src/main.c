@@ -26,6 +26,8 @@
 //#include "stdio.h"
 //#include "string.h"
 
+#include "math.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -103,7 +105,6 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-  float duty_cycle = 0.5;
   float voltage_pin;
   float current_pin;
   float voltage_output;
@@ -112,12 +113,26 @@ int main(void)
   float power_meas;
   float power_prev;
 
-  int delta = 0.05; 							// change in duty cycle last cycle
+  float power_best;
 
-  __HAL_TIM_SET_PRESCALER(&htim1, 0);						// PSC
-  __HAL_TIM_SET_AUTORELOAD(&htim1, 79);						// ARR
+  float duty_cycle = 0.5;
 
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round(duty_cycle * 80));			// CCR1 (duty cycle = CCR1/(ARR+1) )
+  float delta_scale = 10;
+  float delta_smallest = 0.0125;
+  // because of rounding with the CCR value, 0.0125 is the smallest increment that the duty cycle can have.
+  // this value is scaled, and this scale can be adjusted during operation.
+
+  float delta_magnitude = delta_smallest * delta_scale;		// by how much duty cycle in/decreases
+
+
+  float delta = delta_magnitude; 		// change in duty cycle last cycle (+ or - delta_scale).
+
+  //int cycles_delta_decr = 0;
+
+  __HAL_TIM_SET_PRESCALER(&htim1, 0);										// PSC
+  __HAL_TIM_SET_AUTORELOAD(&htim1, 79);										// ARR
+
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round(duty_cycle * 80));			// CCR1, (duty cycle = CCR1/(ARR+1) )
 
   HAL_TIM_GenerateEvent(&htim1, TIM_EVENTSOURCE_UPDATE);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
@@ -136,7 +151,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
 	  voltage_pin = (adc_raw[0] * 3.3f) / 4095.0f;
 	  current_pin = (adc_raw[1] * 3.3f) / 4095.0f;
 
@@ -145,20 +159,41 @@ int main(void)
 
 	  power_meas = voltage_output * current_output;
 
-	  if (power_meas > power_prev && delta > 0) {		// power incrased after increase in dutycycle
-		  duty_cycle = duty_cycle + 0.05;
-		  delta = 0.05;
-	  } else if (power_meas > power_prev && delta < 0){ // power increased after decrease in dutycycle
-
-		  duty_cycle = duty_cycle - 0.05;
-		  delta = -0.05;
-	  } else if (power_meas < power_prev && delta > 0) {
-
-
-	  } else if (power_meas < power_prev && delta < 0) {
-
-
+	  if (power_meas >= power_prev) {
+		  if (delta > 0) {
+			  duty_cycle = duty_cycle + delta_magnitude;
+			  delta = delta_magnitude;
+		  } else {
+			  duty_cycle = duty_cycle - delta_magnitude;
+			  delta = delta_magnitude * -1;
+		  }
+	  } else {		// power_meas < power_prev
+		  if (delta > 0) {
+			  duty_cycle = duty_cycle - delta_magnitude;
+			  delta = delta_magnitude * -1;
+		  } else {
+			  duty_cycle = duty_cycle + delta_magnitude;
+			  delta = delta_magnitude;
+		  }
 	  }
+
+	  if (power_meas > power_best) {
+		  power_best = power_meas;
+	  }
+
+	  // Idea that needs to be worked out more:
+	  // When the measurements become very close to each other for a lot of cycles, the amount by which the
+	  // duty cycle changes is slightly decreased
+	  // have to think about what happens when the load changes.
+	  // also, smallest is 80 possible steps so 1/80 = 0.125
+//	  if (abs(power_prev - power_meas) < 5) {
+//		  cycles_delta_decr += 1;
+//	  }
+//	  if (cycles_delta_decr > 20 && delta_scale > 1) {
+//		  delta_scale -= 1;
+//	  }
+
+	  power_prev = power_meas;
 
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round(duty_cycle * 80));
 
