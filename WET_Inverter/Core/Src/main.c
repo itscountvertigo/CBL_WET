@@ -22,7 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "math.h"
+#include <math.h>
+#include "pwm.h"
 
 /* USER CODE END Includes */
 
@@ -97,23 +98,24 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
-  int ARR = 88;					// 89.887 kHz (~90kHz)
+//  int ARR = 88;					//this gives 89.887 kHz (~90kHz)
+//
+//  // f_PWM = 8MHz/((PSC+1)(ARR+1))
+//  __HAL_TIM_SET_PRESCALER(&htim1, 0);					// PSC
+//  __HAL_TIM_SET_AUTORELOAD(&htim1, ARR);				// ARR
+//
+//  int CCR_1 = round(0.5 * (ARR + 1));
+//
+//  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, CCR_1);		// CCR1 (duty cycle = CCR1/(ARR+1) )
+//
+//  HAL_TIM_GenerateEvent(&htim1, TIM_EVENTSOURCE_UPDATE);
+//
+//  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+//
+//  __HAL_TIM_MOE_ENABLE(&htim1);
 
-  // f_PWM = 8MHz/((PSC+1)(ARR+1))
-  __HAL_TIM_SET_PRESCALER(&htim1, 0);					// PSC
-  __HAL_TIM_SET_AUTORELOAD(&htim1, ARR);				// ARR
-
-  int CCR_1 = round(0.5 * (ARR + 1));
-
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, CCR_1);		// CCR1 (duty cycle = CCR1/(ARR+1) )
-
-  HAL_TIM_GenerateEvent(&htim1, TIM_EVENTSOURCE_UPDATE);
-
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-
-  __HAL_TIM_MOE_ENABLE(&htim1);
-
+  PWM_Init(90000, 0.5);
 
   /* USER CODE END 2 */
 
