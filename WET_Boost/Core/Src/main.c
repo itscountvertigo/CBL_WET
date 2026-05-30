@@ -21,12 +21,15 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//
-//#include "stdlib.h"
-//#include "stdio.h"
-//#include "string.h"
 
-#include "math.h"
+#include <stdint.h>
+#include <math.h>
+
+#include "pwm.h"
+#include "measurements.h"
+#include "mppt.h"
+
+#define MPPT_PERIOD_MS 500
 
 /* USER CODE END Includes */
 
@@ -89,6 +92,17 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
+  MPPT_Controller mppt;
+  MPPT_Init(&mppt);
+
+  // initialize ADC ports
+  uint32_t adc_raw[2];
+  HAL_ADC_Start_DMA(&hadc1, adc_raw, 2);
+
+  uint32_t last_mppt_update = HAL_GetTick();
+
+  Measurement_t measurement;
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -105,45 +119,7 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-  float voltage_pin;
-  float current_pin;
-  float voltage_output;
-  float current_output;
-
-  float power_meas;
-  float power_prev;
-
-  float power_best;
-
-  float duty_cycle = 0.5;
-
-  float delta_scale = 10;
-  float delta_smallest = 0.0125;
-  // because of rounding with the CCR value, 0.0125 is the smallest increment that the duty cycle can have.
-  // this value is scaled, and this scale can be adjusted during operation.
-
-  float delta_magnitude = delta_smallest * delta_scale;		// by how much duty cycle in/decreases
-
-
-  float delta = delta_magnitude; 		// change in duty cycle last cycle (+ or - delta_scale).
-
-  //int cycles_delta_decr = 0;
-
-  __HAL_TIM_SET_PRESCALER(&htim1, 0);										// PSC
-  __HAL_TIM_SET_AUTORELOAD(&htim1, 79);										// ARR
-
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round(duty_cycle * 80));			// CCR1, (duty cycle = CCR1/(ARR+1) )
-
-  HAL_TIM_GenerateEvent(&htim1, TIM_EVENTSOURCE_UPDATE);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-
-  __HAL_TIM_MOE_ENABLE(&htim1);
-  // f_PWM = 8MHz/((PSC+1)(ARR+1))
-  // The PWM is started at 100kHz with 50% duty cycle
-
-  // initialize ADC ports
-  uint32_t adc_raw[2];
-  HAL_ADC_Start_DMA(&hadc1, adc_raw, 2);
+  PWM_Init(55000, 0.5);
 
   /* USER CODE END 2 */
 
@@ -151,51 +127,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  voltage_pin = (adc_raw[0] * 3.3f) / 4095.0f;
-	  current_pin = (adc_raw[1] * 3.3f) / 4095.0f;
+	  Measurement_Update(adc_raw[0], adc_raw[1]);
 
-	  voltage_output = voltage_pin; // todo fix conversion/sensing
-	  current_output = current_pin; // todo fix conversion/sensing
+	  if(HAL_GetTick() - last_mppt_update > MPPT_PERIOD_MS) {
+		  measurement = Measurement_Get();
 
-	  power_meas = voltage_output * current_output;
+		  // MPPT: Perturb & Observe
+		  MPPT_Update(&mppt, measurement.power_filtered);
 
-	  if (power_meas >= power_prev) {
-		  if (delta > 0) {
-			  duty_cycle = duty_cycle + delta_magnitude;
-			  delta = delta_magnitude;
-		  } else {
-			  duty_cycle = duty_cycle - delta_magnitude;
-			  delta = delta_magnitude * -1;
-		  }
-	  } else {		// power_meas < power_prev
-		  if (delta > 0) {
-			  duty_cycle = duty_cycle - delta_magnitude;
-			  delta = delta_magnitude * -1;
-		  } else {
-			  duty_cycle = duty_cycle + delta_magnitude;
-			  delta = delta_magnitude;
-		  }
+		  PWM_SetDutyCycle(mppt.duty_cycle);
+
+		  last_mppt_update = HAL_GetTick();
 	  }
 
-	  if (power_meas > power_best) {
-		  power_best = power_meas;
-	  }
-
-	  // Idea that needs to be worked out more:
-	  // When the measurements become very close to each other for a lot of cycles, the amount by which the
-	  // duty cycle changes is slightly decreased
-	  // have to think about what happens when the load changes.
-	  // also, smallest is 80 possible steps so 1/80 = 0.125
-//	  if (abs(power_prev - power_meas) < 5) {
-//		  cycles_delta_decr += 1;
-//	  }
-//	  if (cycles_delta_decr > 20 && delta_scale > 1) {
-//		  delta_scale -= 1;
-//	  }
-
-	  power_prev = power_meas;
-
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round(duty_cycle * 80));
 
 	  /* USER CODE END WHILE */
 

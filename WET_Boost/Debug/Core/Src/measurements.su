@@ -1,0 +1,2 @@
+../Core/Src/measurements.c:14:6:Measurement_Update	16	static
+../Core/Src/measurements.c:25:15:Measurement_Get	40	static

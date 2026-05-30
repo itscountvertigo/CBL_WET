@@ -1,0 +1,2 @@
+../Core/Src/mppt.c:11:6:MPPT_Init	16	static
+../Core/Src/mppt.c:25:6:MPPT_Update	16	static
