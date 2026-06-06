@@ -46,7 +46,7 @@ void MPPT_Update(MPPT_Controller *mppt, float power_meas) {
     // Store previous power
     mppt->power_prev = power_meas;
 
-    return mppt->duty_cycle;
+    //return mppt->duty_cycle;
 }
 
 
