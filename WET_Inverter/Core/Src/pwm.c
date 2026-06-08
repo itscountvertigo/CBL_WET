@@ -16,15 +16,16 @@ static int ARR;
 
 int PWM_Init(int freq, float duty_cycle) {
 
-	int ARR = (int)roundf(TIMER_CLK / freq - 1);
+	ARR = (int)roundf(TIMER_CLK / freq - 1);
 
 	__HAL_TIM_SET_PRESCALER(&htim1, 0);											// PSC
 	__HAL_TIM_SET_AUTORELOAD(&htim1, ARR);										// ARR
 
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, round((ARR+1) * duty_cycle));	// CCR1, (duty cycle = CCR1/(ARR+1) )
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, round((ARR+1) * duty_cycle));	// CCR1, (duty cycle = CCR1/(ARR+1) )
 
 	HAL_TIM_GenerateEvent(&htim1, TIM_EVENTSOURCE_UPDATE);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
 
 	__HAL_TIM_MOE_ENABLE(&htim1);
 
