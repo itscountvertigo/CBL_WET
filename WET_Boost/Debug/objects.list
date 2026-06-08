@@ -1,4 +1,3 @@
-"./Core/Src/init_pwm.o"
 "./Core/Src/main.o"
 "./Core/Src/measurements.o"
 "./Core/Src/mppt.o"

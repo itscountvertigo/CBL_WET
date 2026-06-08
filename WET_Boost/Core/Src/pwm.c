@@ -16,7 +16,7 @@ static int ARR;
 
 int PWM_Init(int freq, float duty_cycle) {
 
-	int ARR = (int)roundf(TIMER_CLK / freq - 1);
+	ARR = (int)roundf(TIMER_CLK / freq - 1);
 
 	__HAL_TIM_SET_PRESCALER(&htim1, 0);											// PSC
 	__HAL_TIM_SET_AUTORELOAD(&htim1, ARR);										// ARR
@@ -38,4 +38,5 @@ void PWM_SetDutyCycle(float duty_cycle) {
 
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, (int)roundf((ARR+1) * duty_cycle));	// CCR1, (duty cycle = CCR1/(ARR+1) )
 
+//	printf("Duty cycle = %d\r\n", (int)(duty_cycle*100));
 }

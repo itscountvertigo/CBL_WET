@@ -61,7 +61,7 @@ main-build: WET_Boost.elf secondary-outputs
 
 # Tool invocations
 WET_Boost.elf WET_Boost.map: $(OBJS) $(USER_OBJS) C:\Users\20223155\STM32CubeIDE\workspace_1.18.0\WET_Group_6\WET_Boost\STM32F303K8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "WET_Boost.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\20223155\STM32CubeIDE\workspace_1.18.0\WET_Group_6\WET_Boost\STM32F303K8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="WET_Boost.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "WET_Boost.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\20223155\STM32CubeIDE\workspace_1.18.0\WET_Group_6\WET_Boost\STM32F303K8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="WET_Boost.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

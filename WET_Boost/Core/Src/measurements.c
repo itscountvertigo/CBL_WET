@@ -33,6 +33,11 @@ void Measurement_Update(uint32_t voltage_adc_read, uint32_t current_adc_read) {
 	measurement.voltage = (voltage_adc_read * 3.3f) / 4095.0; //todo
 	measurement.current = (current_adc_read * 3.3f) / 4095.0;
 
+//	printf("ADC_V: %d, ADC_I: %d\r\n",
+//			(int)(voltage_adc_read),
+//			(int)(current_adc_read)
+//			);
+
 	//printf("ADC=%lu %lu\r\n", voltage_adc_read, current_adc_read);
 
 	measurement.power_inst = measurement.voltage * measurement.current;
@@ -47,12 +52,11 @@ void Measurement_Update(uint32_t voltage_adc_read, uint32_t current_adc_read) {
 }
 
 Measurement_t Measurement_Get(void) {
-	//printf("test: %.2f\r\n", 1.23f);
-	printf("V: %d, I: %d, P_inst: %.d, P_filt = %d\r\n",
-			(int)(measurement.voltage * 100),
-			(int)(measurement.current * 100),
-			(int)(measurement.power_inst * 100),
-			(int)(measurement.power_filtered * 100)
+	printf("V: %.2f, I: %.2f, P_inst: %.2f, P_filt = %.2f \r\n",
+			measurement.voltage,
+			measurement.current,
+			measurement.power_inst,
+			measurement.power_filtered
 			);
 	return measurement;
 
