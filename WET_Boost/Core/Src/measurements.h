@@ -13,6 +13,9 @@
 
 typedef struct
 {
+    uint32_t voltage_adc;
+    uint32_t current_adc;
+
     float voltage;
     float current;
 

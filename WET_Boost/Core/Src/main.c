@@ -163,9 +163,10 @@ int main(void)
 		  measurement = Measurement_Get();
 
 		  // MPPT: Perturb & Observe
-		  MPPT_Update(&mppt, measurement.power_filtered);
+		  //MPPT_Update(&mppt, measurement.power_filtered);
+		  printf("Duty cycle: %.2f\r\n", mppt.duty_cycle);
 
-		  //PWM_SetDutyCycle(mppt.duty_cycle);
+		 //PWM_SetDutyCycle(mppt.duty_cycle);
 
 		  last_mppt_update = HAL_GetTick();
 	  }

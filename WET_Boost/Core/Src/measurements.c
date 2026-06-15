@@ -9,11 +9,17 @@
 #include <stdio.h>
 #include "measurements.h"
 
-static Measurement_t measurement = {0};;
+static Measurement_t measurement = {0};
 
 extern UART_HandleTypeDef huart2;
 
 #define MEASUREMENT_ALPHA 0.1f
+
+#define VOLTAGE_DIV_SCALE 20.5
+
+#define LA55_P_RATIO 1000
+#define R_BURDEN 100
+#define LA55_P_TURNS 3
 
 #ifdef __GNUC__
 	#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
@@ -30,8 +36,11 @@ PUTCHAR_PROTOTYPE
 
 void Measurement_Update(uint32_t voltage_adc_read, uint32_t current_adc_read) {
 
-	measurement.voltage = (voltage_adc_read * 3.3f) / 4095.0; //todo
-	measurement.current = (current_adc_read * 3.3f) / 4095.0;
+	measurement.voltage_adc = voltage_adc_read;
+	measurement.current_adc = current_adc_read;
+
+	measurement.voltage = (voltage_adc_read * 3.3f) / 4095.0 * VOLTAGE_DIV_SCALE;
+	measurement.current = (current_adc_read * 3.3f) / 4095.0 * (LA55_P_RATIO / R_BURDEN) / LA55_P_TURNS;
 
 //	printf("ADC_V: %d, ADC_I: %d\r\n",
 //			(int)(voltage_adc_read),
@@ -52,9 +61,9 @@ void Measurement_Update(uint32_t voltage_adc_read, uint32_t current_adc_read) {
 }
 
 Measurement_t Measurement_Get(void) {
-	printf("V: %.2f, I: %.2f, P_inst: %.2f, P_filt = %.2f \r\n",
-			measurement.voltage,
-			measurement.current,
+	printf("----------------\r\nV: %.2f (%d), I: %.2f (%d),\r\n P_inst: %.2f, P_filt = %.2f \r\n",
+			measurement.voltage, (int)measurement.voltage_adc,
+			measurement.current, (int)measurement.current_adc,
 			measurement.power_inst,
 			measurement.power_filtered
 			);
